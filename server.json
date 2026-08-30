@@ -1,0 +1,67 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.A1-x-Tech/mcp-google-contacts",
+  "title": "Google Contacts MCP",
+  "description": "MCP server for the Google Contacts / People API: search, list, create, update and delete contacts, manage groups, batch operations.",
+  "websiteUrl": "https://github.com/A1-x-Tech/mcp-google-contacts#readme",
+  "repository": {
+    "url": "https://github.com/A1-x-Tech/mcp-google-contacts",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "mcp-google-contacts",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "GOOGLE_CONTACTS_CLIENT_ID",
+          "description": "Google OAuth2 client id (refresh-token flow).",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "GOOGLE_CONTACTS_CLIENT_SECRET",
+          "description": "Google OAuth2 client secret (refresh-token flow). Treat it as a secret.",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "GOOGLE_CONTACTS_REFRESH_TOKEN",
+          "description": "Google OAuth2 refresh token, exchanged for access tokens automatically. Treat it as a secret.",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "GOOGLE_CONTACTS_ACCESS_TOKEN",
+          "description": "Static OAuth2 access token (~1h lifetime) — alternative to the refresh-token trio, mostly for testing.",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "GOOGLE_CONTACTS_API_BASE",
+          "description": "API root override.",
+          "isRequired": false,
+          "default": "https://people.googleapis.com"
+        },
+        {
+          "name": "GOOGLE_CONTACTS_TIMEOUT_MS",
+          "description": "Per-request timeout in milliseconds.",
+          "isRequired": false,
+          "default": "60000"
+        },
+        {
+          "name": "GOOGLE_CONTACTS_MAX_RETRIES",
+          "description": "Retries on transient errors (429 always; 5xx/network for reads).",
+          "isRequired": false,
+          "default": "3"
+        }
+      ]
+    }
+  ]
+}
