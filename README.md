@@ -3,8 +3,8 @@
 **English** | [Русский](./README.ru.md)
 
 [![npm](https://img.shields.io/npm/v/mcp-google-contacts)](https://www.npmjs.com/package/mcp-google-contacts)
-[![CI](https://github.com/A1-x-Tech/mcp-google-contacts/actions/workflows/ci.yml/badge.svg)](https://github.com/A1-x-Tech/mcp-google-contacts/actions/workflows/ci.yml)
 [![Glama](https://glama.ai/mcp/servers/A1-x-Tech/mcp-google-contacts/badges/score.svg)](https://glama.ai/mcp/servers/A1-x-Tech/mcp-google-contacts)
+[![CI](https://github.com/A1-x-Tech/mcp-google-contacts/actions/workflows/ci.yml/badge.svg)](https://github.com/A1-x-Tech/mcp-google-contacts/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 **A1 Google Contacts MCP** lets an AI app manage your Google address book in plain language. Find a contact, create or update one, organize contacts with labels, run batch imports and clean-ups, and turn auto-saved "Other contacts" into real ones.
