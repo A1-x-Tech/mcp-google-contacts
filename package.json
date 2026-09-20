@@ -1,6 +1,6 @@
 {
   "name": "mcp-google-contacts",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server for Google Contacts (People API) — search, read, create, update and delete contacts, manage contact groups and run batch operations. For Claude, Cursor, Codex and other AI clients.",
   "mcpName": "io.github.A1-x-Tech/mcp-google-contacts",
   "type": "module",
@@ -49,6 +49,7 @@
     "url": "https://github.com/A1-x-Tech/mcp-google-contacts/issues"
   },
   "dependencies": {
+    "@a1-x-tech/mcp-google-auth": "^0.1.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "zod": "^3.25.0"
   },

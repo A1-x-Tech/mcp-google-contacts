@@ -11,7 +11,8 @@
 
 It uses the Google People API — the API behind Google Contacts — with your Google account. It guards every update against concurrent edits, keeps reads compact with explicit field masks and makes the limits of the People API explicit instead of implying that every contacts task is possible.
 
-- **19 tools.** List, search and read contacts, create, update and delete them one at a time or in batches, manage contact groups and membership, and reach "Other contacts".
+- **25 tools.** List, search and read contacts, create, update and delete them one at a time or in batches, manage contact groups and membership, and reach "Other contacts".
+- **Connects from the conversation.** Say "connect Google Contacts": the server walks you through the OAuth client, catches Google's redirect on `127.0.0.1` with PKCE and keeps the tokens itself — no config files, no restart.
 - **Updates don't clobber.** Every update is etag-guarded: if a contact changed elsewhere since it was read, the write fails instead of silently overwriting the concurrent edit.
 - **Deletes are real.** The People API has no trash; deleting a contact or group is permanent, and the server marks those tools destructive so your AI app can ask first.
 - **Minimal Google scopes.** It uses `contacts` for read/write — `contacts.readonly` is enough for a read-only setup — plus `contacts.other.readonly` only for "Other contacts", without broad account access.
@@ -52,10 +53,10 @@ Start with a read-only question:
 
 ## Quick start
 
-You need Node.js 20+, a Google account and OAuth credentials from a Google Cloud project with the People API enabled.
+You need Node.js 20+ and a Google account. Credentials are not required at install time — the server connects from the conversation.
 
-1. [Prepare Google OAuth access](#getting-access).
-2. Add the server to your AI app.
+1. Add the server to your AI app.
+2. Say "connect Google Contacts": the assistant walks you through [creating the OAuth client and approving access](#getting-access) without editing config files.
 3. Ask the read-only question above.
 
 <details open>
@@ -69,9 +70,6 @@ You need Node.js 20+, a Google account and OAuth credentials from a Google Cloud
 
 ```bash
 codex mcp add google-contacts \
-  --env GOOGLE_CONTACTS_CLIENT_ID=your_client_id \
-  --env GOOGLE_CONTACTS_CLIENT_SECRET=your_client_secret \
-  --env GOOGLE_CONTACTS_REFRESH_TOKEN=your_refresh_token \
   -- npx -y mcp-google-contacts@latest
 ```
 
@@ -90,9 +88,6 @@ codex mcp list
 
 ```bash
 claude mcp add \
-  --env GOOGLE_CONTACTS_CLIENT_ID=your_client_id \
-  --env GOOGLE_CONTACTS_CLIENT_SECRET=your_client_secret \
-  --env GOOGLE_CONTACTS_REFRESH_TOKEN=your_refresh_token \
   --transport stdio --scope user google-contacts \
   -- npx -y mcp-google-contacts@latest
 ```
@@ -119,12 +114,7 @@ This repository currently publishes an npm stdio package and does not contain a 
   "mcpServers": {
     "google-contacts": {
       "command": "npx",
-      "args": ["-y", "mcp-google-contacts@latest"],
-      "env": {
-        "GOOGLE_CONTACTS_CLIENT_ID": "your_client_id",
-        "GOOGLE_CONTACTS_CLIENT_SECRET": "your_client_secret",
-        "GOOGLE_CONTACTS_REFRESH_TOKEN": "your_refresh_token"
-      }
+      "args": ["-y", "mcp-google-contacts@latest"]
     }
   }
 }
@@ -149,12 +139,7 @@ Add this to `~/.cursor/mcp.json` on macOS/Linux or `%USERPROFILE%\.cursor\mcp.js
     "google-contacts": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "mcp-google-contacts@latest"],
-      "env": {
-        "GOOGLE_CONTACTS_CLIENT_ID": "your_client_id",
-        "GOOGLE_CONTACTS_CLIENT_SECRET": "your_client_secret",
-        "GOOGLE_CONTACTS_REFRESH_TOKEN": "your_refresh_token"
-      }
+      "args": ["-y", "mcp-google-contacts@latest"]
     }
   }
 }
@@ -177,19 +162,9 @@ Run **MCP: Open User Configuration** and add:
     "google-contacts": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "mcp-google-contacts@latest"],
-      "env": {
-        "GOOGLE_CONTACTS_CLIENT_ID": "${input:contacts_client_id}",
-        "GOOGLE_CONTACTS_CLIENT_SECRET": "${input:contacts_client_secret}",
-        "GOOGLE_CONTACTS_REFRESH_TOKEN": "${input:contacts_refresh_token}"
-      }
+      "args": ["-y", "mcp-google-contacts@latest"]
     }
-  },
-  "inputs": [
-    { "type": "promptString", "id": "contacts_client_id", "description": "Google OAuth client ID" },
-    { "type": "promptString", "id": "contacts_client_secret", "description": "Google OAuth client secret", "password": true },
-    { "type": "promptString", "id": "contacts_refresh_token", "description": "Google OAuth refresh token", "password": true }
-  ]
+  }
 }
 ```
 
@@ -249,7 +224,20 @@ The AI client controls confirmation prompts. The server marks reads, writes and 
 
 ## Getting access
 
-Google Contacts requires OAuth 2.0; an API key is not enough.
+Google Contacts requires OAuth 2.0; an API key is not enough. There are two ways in, and the first one needs no configuration files.
+
+### Connect from the chat (recommended)
+
+Say "connect Google Contacts" and the assistant runs the flow with you:
+
+1. `setup_instructions` prints the checklist: create or select a Google Cloud project, enable **Google People API**, configure the consent screen and create a **Desktop app** OAuth client.
+2. Download that client's JSON ("Download JSON") and give the assistant its **path** — `set_client` stores it owner-only. The secret never goes through the conversation.
+3. `start_login` returns a Google consent link. Open it **on this machine** and approve; the code comes back to a one-shot listener on `127.0.0.1` (PKCE), never through the chat.
+4. `finish_login` exchanges the code and saves the tokens to `~/.config/mcp-google-contacts/credentials.json` (mode 0600) and verifies them with a real Google People API call — so an API that is still switched off is caught right there.
+
+The tokens are re-read on every call, so the connection works immediately — no restart of the AI app. `auth_status` shows what is connected, `logout` revokes and deletes it.
+
+### Environment variables (CI, unattended installs)
 
 1. Create or select a Google Cloud project and enable **People API**.
 2. Configure the OAuth consent screen and create a **Desktop app** OAuth client.
@@ -267,12 +255,15 @@ Testing-mode OAuth refresh tokens can expire after seven days. Publish the OAuth
 
 ## Configuration
 
+Every variable is optional — with none of them the server connects [from the chat](#connect-from-the-chat-recommended).
+
 | Variable | Required | Description |
 |---|---|---|
-| `GOOGLE_CONTACTS_CLIENT_ID` | Yes* | OAuth client ID. |
-| `GOOGLE_CONTACTS_CLIENT_SECRET` | Yes* | OAuth client secret. |
-| `GOOGLE_CONTACTS_REFRESH_TOKEN` | Yes* | OAuth refresh token. |
-| `GOOGLE_CONTACTS_ACCESS_TOKEN` | Yes* | Short-lived alternative to the OAuth trio (~1 h). |
+| `GOOGLE_CONTACTS_CLIENT_ID` | No* | OAuth client ID. |
+| `GOOGLE_CONTACTS_CLIENT_SECRET` | No* | OAuth client secret. |
+| `GOOGLE_CONTACTS_REFRESH_TOKEN` | No* | OAuth refresh token. |
+| `GOOGLE_CONTACTS_ACCESS_TOKEN` | No* | Short-lived alternative to the OAuth trio (~1 h). |
+| `GOOGLE_CONTACTS_OAUTH_PORT` | No | Fixed loopback port for the in-chat login; useful over SSH port forwarding. |
 | `GOOGLE_CONTACTS_API_BASE` | No | Google People API base URL override. |
 | `GOOGLE_CONTACTS_TIMEOUT_MS` | No | Per-request timeout; default `60000` ms. |
 | `GOOGLE_CONTACTS_MAX_RETRIES` | No | Temporary-error retries; default `3`. |

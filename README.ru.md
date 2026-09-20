@@ -11,7 +11,8 @@
 
 Сервер работает с Google People API — API, на котором построены Google Контакты, — через ваш Google-аккаунт. Он защищает каждое обновление от параллельных правок, делает чтение компактным за счёт явных масок полей и явно показывает ограничения People API, а не создаёт впечатление, что с контактами можно сделать всё.
 
-- **19 инструментов.** Список, поиск и чтение контактов, создание, обновление и удаление по одному или пакетами, управление группами контактов и их составом, доступ к «Другим контактам».
+- **25 инструментов.** Список, поиск и чтение контактов, создание, обновление и удаление по одному или пакетами, управление группами контактов и их составом, доступ к «Другим контактам».
+- **Подключение из диалога.** Скажите «подключи Google Контакты»: сервер проведёт через создание OAuth-клиента, поймает редирект Google на `127.0.0.1` с PKCE и сам сохранит токены — без конфигов и перезапуска.
 - **Обновления не затирают чужие правки.** Каждое обновление защищено etag: если контакт изменился где-то ещё после чтения, запись завершится ошибкой, а не молча перезапишет параллельную правку.
 - **Удаление — настоящее.** В People API нет корзины; удаление контакта или группы необратимо, и сервер помечает эти инструменты как разрушительные, чтобы AI-приложение спросило заранее.
 - **Минимальные scope Google.** Используется `contacts` для чтения и записи — для read-only-установки достаточно `contacts.readonly` — плюс `contacts.other.readonly` только для «Других контактов», без широкого доступа к аккаунту.
@@ -52,10 +53,10 @@
 
 ## Быстрый старт
 
-Нужны Node.js 20+, Google-аккаунт и OAuth-данные из проекта Google Cloud с включённым People API.
+Нужны Node.js 20+ и Google-аккаунт. Учётные данные при установке не нужны: сервер подключается прямо в диалоге.
 
-1. [Подготовьте Google OAuth-доступ](#как-получить-доступ).
-2. Добавьте сервер в AI-приложение.
+1. Добавьте сервер в AI-приложение.
+2. Скажите «подключи Google Контакты» — ассистент проведёт [создание OAuth-клиента и выдачу доступа](#как-получить-доступ), не трогая конфиги.
 3. Отправьте запрос, который только читает данные.
 
 <details open>
@@ -69,9 +70,6 @@
 
 ```bash
 codex mcp add google-contacts \
-  --env GOOGLE_CONTACTS_CLIENT_ID=your_client_id \
-  --env GOOGLE_CONTACTS_CLIENT_SECRET=your_client_secret \
-  --env GOOGLE_CONTACTS_REFRESH_TOKEN=your_refresh_token \
   -- npx -y mcp-google-contacts@latest
 ```
 
@@ -90,9 +88,6 @@ codex mcp list
 
 ```bash
 claude mcp add \
-  --env GOOGLE_CONTACTS_CLIENT_ID=your_client_id \
-  --env GOOGLE_CONTACTS_CLIENT_SECRET=your_client_secret \
-  --env GOOGLE_CONTACTS_REFRESH_TOKEN=your_refresh_token \
   --transport stdio --scope user google-contacts \
   -- npx -y mcp-google-contacts@latest
 ```
@@ -119,12 +114,7 @@ claude mcp list
   "mcpServers": {
     "google-contacts": {
       "command": "npx",
-      "args": ["-y", "mcp-google-contacts@latest"],
-      "env": {
-        "GOOGLE_CONTACTS_CLIENT_ID": "your_client_id",
-        "GOOGLE_CONTACTS_CLIENT_SECRET": "your_client_secret",
-        "GOOGLE_CONTACTS_REFRESH_TOKEN": "your_refresh_token"
-      }
+      "args": ["-y", "mcp-google-contacts@latest"]
     }
   }
 }
@@ -149,12 +139,7 @@ claude mcp list
     "google-contacts": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "mcp-google-contacts@latest"],
-      "env": {
-        "GOOGLE_CONTACTS_CLIENT_ID": "your_client_id",
-        "GOOGLE_CONTACTS_CLIENT_SECRET": "your_client_secret",
-        "GOOGLE_CONTACTS_REFRESH_TOKEN": "your_refresh_token"
-      }
+      "args": ["-y", "mcp-google-contacts@latest"]
     }
   }
 }
@@ -177,19 +162,9 @@ claude mcp list
     "google-contacts": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "mcp-google-contacts@latest"],
-      "env": {
-        "GOOGLE_CONTACTS_CLIENT_ID": "${input:contacts_client_id}",
-        "GOOGLE_CONTACTS_CLIENT_SECRET": "${input:contacts_client_secret}",
-        "GOOGLE_CONTACTS_REFRESH_TOKEN": "${input:contacts_refresh_token}"
-      }
+      "args": ["-y", "mcp-google-contacts@latest"]
     }
-  },
-  "inputs": [
-    { "type": "promptString", "id": "contacts_client_id", "description": "Google OAuth client ID" },
-    { "type": "promptString", "id": "contacts_client_secret", "description": "Google OAuth client secret", "password": true },
-    { "type": "promptString", "id": "contacts_refresh_token", "description": "Google OAuth refresh token", "password": true }
-  ]
+  }
 }
 ```
 
@@ -249,7 +224,20 @@ claude mcp list
 
 ## Как получить доступ
 
-Google Контакты требуют OAuth 2.0: одного API-ключа недостаточно.
+Google Contacts требует OAuth 2.0: одного API-ключа недостаточно. Путей два, и первый не требует править конфигурационные файлы.
+
+### Подключение из диалога (рекомендуемый путь)
+
+Скажите «подключи Google Контакты», и ассистент пройдёт флоу вместе с вами:
+
+1. `setup_instructions` выдаёт чек-лист: создать или выбрать проект Google Cloud, включить **Google People API**, настроить consent screen и создать OAuth-клиент типа **Desktop app**.
+2. Скачайте JSON этого клиента («Download JSON») и передайте ассистенту **путь** к файлу — `set_client` сохранит его с правами только для владельца. Секрет через переписку не проходит.
+3. `start_login` возвращает ссылку на согласие Google. Откройте её **на этой же машине** и подтвердите доступ: код возвращается на одноразовый слушатель `127.0.0.1` (PKCE), а не в чат.
+4. `finish_login` меняет код на токены и кладёт их в `~/.config/mcp-google-contacts/credentials.json` (права 0600) и проверяет их реальным вызовом Google People API — так невключённый API ловится сразу.
+
+Токены перечитываются на каждый вызов, поэтому подключение действует немедленно — перезапускать AI-приложение не нужно. `auth_status` показывает состояние, `logout` отзывает токен и удаляет его.
+
+### Переменные окружения (CI и автоматические установки)
 
 1. Создайте или выберите проект Google Cloud и включите **People API**.
 2. Настройте OAuth consent screen и создайте OAuth-клиент типа **Desktop app**.
@@ -267,12 +255,15 @@ Refresh token OAuth-приложения в режиме Testing может ис
 
 ## Конфигурация
 
+Все переменные необязательные — без единой из них сервер подключается [из диалога](#подключение-из-диалога-рекомендуемый-путь).
+
 | Переменная | Обязательна | Описание |
 |---|---|---|
-| `GOOGLE_CONTACTS_CLIENT_ID` | Да* | OAuth client ID. |
-| `GOOGLE_CONTACTS_CLIENT_SECRET` | Да* | OAuth client secret. |
-| `GOOGLE_CONTACTS_REFRESH_TOKEN` | Да* | OAuth refresh token. |
-| `GOOGLE_CONTACTS_ACCESS_TOKEN` | Да* | Короткоживущая альтернатива OAuth-тройке (~1 ч). |
+| `GOOGLE_CONTACTS_CLIENT_ID` | Нет* | OAuth client ID. |
+| `GOOGLE_CONTACTS_CLIENT_SECRET` | Нет* | OAuth client secret. |
+| `GOOGLE_CONTACTS_REFRESH_TOKEN` | Нет* | OAuth refresh token. |
+| `GOOGLE_CONTACTS_ACCESS_TOKEN` | Нет* | Короткоживущая альтернатива OAuth-тройке (~1 ч). |
+| `GOOGLE_CONTACTS_OAUTH_PORT` | Нет | Фиксированный порт loopback-слушателя для входа из диалога; нужен при пробросе портов по SSH. |
 | `GOOGLE_CONTACTS_API_BASE` | Нет | Переопределяет базовый URL Google People API. |
 | `GOOGLE_CONTACTS_TIMEOUT_MS` | Нет | Тайм-аут одного запроса; по умолчанию `60000` мс. |
 | `GOOGLE_CONTACTS_MAX_RETRIES` | Нет | Повторы временных ошибок; по умолчанию `3`. |
