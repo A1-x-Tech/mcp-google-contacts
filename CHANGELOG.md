@@ -47,24 +47,6 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
   restart needed); setting the environment variables + restart remains the
   documented alternative.
 
-## [Unreleased]
-
-### Changed
-
-- The search-cache warmup request (empty query) is now sent once per endpoint per
-  session — before the first `search_contacts` / Other-contacts search — instead of
-  before every search, halving the quota spend of repeated searches; a failed warmup
-  is no longer retried, so its backoff can never delay the real query.
-- `Retry-After` is now honored in both RFC 9110 forms — delay-seconds and HTTP-date —
-  when backing off before a retry (the date form used to fall back silently to the
-  exponential schedule).
-
-### Fixed
-
-- `birthday` can now be cleared through the normalized vocabulary: pass `""` to
-  `update_contact` / `batch_update_contacts` (like `nickname`/`notes`); previously
-  clearing it required `raw_request`.
-
 ## [0.1.0] — 2026-08-30
 
 ### Added
@@ -109,6 +91,22 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
   cleanup after success and failure; read-only `npm run smoke` for daily health checks.
 - CI (Node 20/22/24: typecheck + build + tests) and a daily read-only live health check
   that skips itself when repo secrets are absent.
+
+### Changed
+
+- The search-cache warmup request (empty query) is now sent once per endpoint per
+  session — before the first `search_contacts` / Other-contacts search — instead of
+  before every search, halving the quota spend of repeated searches; a failed warmup
+  is no longer retried, so its backoff can never delay the real query.
+- `Retry-After` is now honored in both RFC 9110 forms — delay-seconds and HTTP-date —
+  when backing off before a retry (the date form used to fall back silently to the
+  exponential schedule).
+
+### Fixed
+
+- `birthday` can now be cleared through the normalized vocabulary: pass `""` to
+  `update_contact` / `batch_update_contacts` (like `nickname`/`notes`); previously
+  clearing it required `raw_request`.
 
 [1.0.0]: https://github.com/A1-x-Tech/mcp-google-contacts/releases/tag/v1.0.0
 [0.2.0]: https://github.com/A1-x-Tech/mcp-google-contacts/releases/tag/v0.2.0
