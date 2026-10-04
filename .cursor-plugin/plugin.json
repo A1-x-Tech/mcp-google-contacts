@@ -1,0 +1,24 @@
+{
+  "name": "mcp-google-contacts",
+  "displayName": "A1 Google Contacts MCP",
+  "description": "MCP server for Google Contacts (People API) — search, read, create, update and delete contacts, manage contact groups and run batch operations. For Claude, Cursor, Codex and other AI clients.",
+  "author": {
+    "name": "Aleksandr Kovalko & Zinnur Temerbekov"
+  },
+  "homepage": "https://github.com/A1-x-Tech/mcp-google-contacts#readme",
+  "repository": "https://github.com/A1-x-Tech/mcp-google-contacts",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "google",
+    "google-contacts",
+    "people-api",
+    "contacts",
+    "contact-groups",
+    "claude",
+    "cursor",
+    "codex"
+  ],
+  "logo": "assets/a1-logo.svg"
+}
