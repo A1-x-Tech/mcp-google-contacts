@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "google-contacts": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-google-contacts@latest"
+      ]
+    }
+  }
+}
