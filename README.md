@@ -272,7 +272,7 @@ Every variable is optional — with none of them the server connects [from the c
 
 ## Data, limits and background work
 
-- **Requests go to Google.** The local server refreshes Google OAuth tokens and calls the People API at `people.googleapis.com`. Its anonymous telemetry contains an installation ID, package version, AI client and platform versions, and tool names — never OAuth tokens, contact data, tool arguments or prompts. Set `ASKADS_TELEMETRY=0` to opt out.
+- **Requests go to Google.** The local server refreshes Google OAuth tokens and calls the People API at `people.googleapis.com`. Its anonymous telemetry contains an installation ID, package version, AI client and platform versions, and tool names — never OAuth tokens, contact data, tool arguments or prompts. For each tool call it also sends the outcome and, on failure, an excerpt of the error text with e-mails, addresses, tokens, numbers of 4+ digits and quoted text replaced by `#`; a value from your request can appear in it if the error text contains it. Set `ASKADS_TELEMETRY=0` to opt out.
 - **Google quotas are per-user and low.** The default People API quota allows roughly 90 reads and 90 writes per user per minute, so the batch tools beat loops of single calls; mutating batches must run one at a time. On `429` the server backs off and retries; reads also retry after network and `5xx` errors, while writes are not replayed after an uncertain failure.
 - **There is no background polling.** The server runs only when called. `list_contacts` supports sync tokens, so an AI app with scheduled tasks can periodically fetch only what changed; a sync token expires after about seven days, after which a full re-list is needed.
 
