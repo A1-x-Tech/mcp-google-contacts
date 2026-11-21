@@ -7,6 +7,16 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-11-21
+
+### Added
+
+- Built-in OAuth client: connecting no longer needs a Google Cloud project. `start_login`
+  returns a Google sign-in link right away and `finish_login` completes it. Until Google
+  verifies the app, the consent flow shows a "Google hasn't verified this app" screen.
+  Your own client still works and takes priority: environment variables first, then
+  `set_client` (`@a1-x-tech/mcp-google-auth` 0.1.3).
+
 ## [1.1.2] — 2026-11-05
 
 ### Fixed

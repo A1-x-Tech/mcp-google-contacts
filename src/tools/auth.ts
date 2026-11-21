@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   OAuthError,
+  A1_DEFAULT_CLIENT,
   registerGoogleAuth,
   TokenProvider,
   unconfiguredPrefix,
@@ -101,6 +102,8 @@ export const AUTH_OPTIONS: GoogleAuthOptions = {
   serverName: "contacts",
   envPrefix: "GOOGLE_CONTACTS",
   scopes: LOGIN_SCOPES,
+  // Built-in A1 OAuth client: login without a Google Cloud project. Env and set_client still win.
+  defaultClient: A1_DEFAULT_CLIENT,
   verifyIdentity,
   // Login-tool failures go through the server's own renderer, so telemetry gets their origin.
   fail,
